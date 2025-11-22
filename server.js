@@ -13,7 +13,7 @@ app.use(express.json());
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from DevFest Tamale 2025! 🎉',
+    message: 'Hello from DevFest Tamale 2025 test! 🎉',
     version: APP_VERSION,
     buildTime: BUILD_TIME,
     commitSha: COMMIT_SHA.substring(0, 7),
