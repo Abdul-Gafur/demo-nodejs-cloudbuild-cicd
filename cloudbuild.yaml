@@ -1,0 +1,59 @@
+steps:
+  # Step 1: Install dependencies
+  - name: 'node:16'
+    id: 'install-dependencies'
+    entrypoint: 'npm'
+    args: ['install']
+
+  # Step 2: Run tests (optional but recommended)
+  - name: 'node:16'
+    id: 'run-tests'
+    entrypoint: 'npm'
+    args: ['test']
+    waitFor: ['install-dependencies']
+
+  # Step 3: Build the application
+  - name: 'node:16'
+    id: 'build-app'
+    entrypoint: 'npm'
+    args: ['run', 'build']
+    waitFor: ['install-dependencies']
+
+  # Step 4: Create deployment package
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'package-app'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p deploy
+        cp -r dist/* deploy/ 2>/dev/null || cp -r *.js deploy/ 2>/dev/null || cp -r . deploy/
+        cp package.json deploy/ 2>/dev/null || true
+        tar -czf app-${SHORT_SHA}.tar.gz -C deploy .
+
+  # Step 5: Deploy to VM
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-to-vm'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud compute scp app-${SHORT_SHA}.tar.gz ${_VM_NAME}:~/app.tar.gz --zone=${_ZONE}
+        gcloud compute ssh ${_VM_NAME} --zone=${_ZONE} --command="
+          mkdir -p ${_APP_DIR}
+          tar -xzf ~/app.tar.gz -C ${_APP_DIR}
+          cd ${_APP_DIR} && npm install --production || true
+          sudo systemctl restart ${_SERVICE_NAME} || pm2 restart ${_SERVICE_NAME} || pm2 start ${_APP_DIR}/server.js --name ${_SERVICE_NAME} || true
+          rm ~/app.tar.gz
+        "
+
+substitutions:
+  _VM_NAME: 'demo-vm'
+  _ZONE: 'us-central1-a'
+  _APP_DIR: '/var/www/my-app'
+  _SERVICE_NAME: 'my-app'
+
+options:
+  # machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+

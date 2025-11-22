@@ -1,0 +1,25 @@
+{
+  "name": "devfest-demo-app",
+  "version": "1.0.0",
+  "description": "Sample application for DevFest Tamale 2025 CI/CD demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js",
+    "build": "echo 'Build step: Preparing application for deployment' && mkdir -p dist && cp -r *.js dist/ 2>/dev/null || true && cp package.json dist/ 2>/dev/null || true"
+  },
+  "keywords": [
+    "devfest",
+    "cicd",
+    "demo"
+  ],
+  "author": "DevFest Tamale 2025",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
+
